@@ -1,0 +1,47 @@
+# Arquivos e pastas específicos do Android
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/.idea/compiler.xml
+/.idea/jarRepositories.xml
+/.idea/deploymentTargetDropDown.xml
+/.idea/kotlinc.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Arquivos gerados pelo Gradle
+.gradle/
+build/
+release/
+
+# Arquivos de configuração do Android Studio
+*.log
+
+# APKs e bundles gerados
+*.apk
+*.aab
+*.ap_
+*.aar
+
+# Chaves de assinatura de aplicativos
+*.jks
+*.keystore
+*.p12
+*.pepk
+
+# Google Services
+google-services.json
+
+# Arquivos de configuração específicos para emuladores/AVD
+captures/
+.navigation/
