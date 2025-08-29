@@ -30,6 +30,38 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+    private fun showCameraPermissionDialog() {
+        val dialog = android.app.Dialog(this)
+        dialog.setContentView(androidx.appcompat.widget.AppCompatTextView(this).apply {
+            text = "\uD83D\uDD12 Permissão de Câmera Necessária\n\nEste app precisa da sua permissão para acessar a câmera.\n\nClique em Permitir para continuar."
+            setTextColor(android.graphics.Color.parseColor("#00fff7"))
+            textSize = 20f
+            setPadding(60, 60, 60, 60)
+            setBackgroundColor(android.graphics.Color.parseColor("#B39DDB"))
+            background.alpha = 220
+            typeface = android.graphics.Typeface.MONOSPACE
+            gravity = android.view.Gravity.CENTER
+        })
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.setCancelable(false)
+        dialog.show()
+
+        // Botão estilizado para permitir
+        val button = android.widget.Button(this).apply {
+            text = "Permitir"
+            setTextColor(android.graphics.Color.parseColor("#ffe600"))
+            setBackgroundColor(android.graphics.Color.parseColor("#7C4DFF"))
+            background.alpha = 180
+            textSize = 18f
+            typeface = android.graphics.Typeface.MONOSPACE
+            setPadding(40, 20, 40, 20)
+            setOnClickListener {
+                dialog.dismiss()
+                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+        (dialog.findViewById<androidx.appcompat.widget.AppCompatTextView>(android.R.id.content)?.parent as? android.widget.FrameLayout)?.addView(button)
+    }
     
     private lateinit var binding: ActivityMainBinding
     private var imageCapture: ImageCapture? = null
@@ -50,6 +82,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+    // Exibir popup estilizado ao abrir o app
+    showCameraPermissionDialog()
         super.onCreate(savedInstanceState)
         
         try {

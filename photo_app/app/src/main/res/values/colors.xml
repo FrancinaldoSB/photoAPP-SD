@@ -1,3 +1,9 @@
+    <color name="cyber_yellow">#ffe600</color>
+    <color name="cyber_cyan">#00fff7</color>
+    <color name="cyber_pink">#ff00c8</color>
+    <color name="cyber_bg">#18122B</color>
+    <color name="cyber_border">#7C4DFF</color>
+    <color name="cyber_translucent">#B39DDBB3</color>
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="purple_200">#C3B1E1</color> <!-- pastel purple -->

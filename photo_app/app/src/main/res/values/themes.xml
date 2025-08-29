@@ -1,3 +1,25 @@
+    <style name="CyberpunkEditText" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/cyber_translucent</item>
+        <item name="boxStrokeColor">@color/cyber_cyan</item>
+        <item name="boxCornerRadiusTopStart">18dp</item>
+        <item name="boxCornerRadiusTopEnd">18dp</item>
+        <item name="boxCornerRadiusBottomStart">18dp</item>
+        <item name="boxCornerRadiusBottomEnd">18dp</item>
+        <item name="android:textColor">@color/cyber_cyan</item>
+        <item name="android:fontFamily">monospace</item>
+    </style>
+    <style name="CyberpunkButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:backgroundTint">@color/cyber_translucent</item>
+        <item name="android:textColor">@color/cyber_yellow</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="cornerRadius">18dp</item>
+        <item name="android:shadowColor">@color/cyber_cyan</item>
+        <item name="android:shadowDx">2</item>
+        <item name="android:shadowDy">2</item>
+        <item name="android:shadowRadius">3</item>
+    </style>
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
