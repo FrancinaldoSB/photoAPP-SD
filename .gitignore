@@ -1,8 +1,8 @@
 # Imagens
-*.jpg
 *.jpeg
-*.png
 *.gif
+
+uploads
 
 # Arquivos específicos do Python
 __pycache__/
