@@ -71,14 +71,15 @@ Este projeto consiste em uma aplicação distribuída para captura e envio de fo
    ./gradlew installDebug
    ```
 
-## Usando o Aplicativo
+## Imagens do Aplicativo e Servidor
 
-1. Ao abrir o aplicativo, insira o endereço IP e a porta do servidor no formato `192.168.1.100:5000`.
+### Tela do App
+<div align="center">
 
-2. Toque em "Pedir Permissão da Câmera" e conceda a permissão solicitada.
+  <img src="./img/appinicial.jpg" alt="Tela Inicial do App" width="45%"/>
+  <img src="./img/telaapp.jpg" alt="Tela do App Pós-foto" width="45%"/>
 
-3. Use o botão "Tirar Foto" para capturar uma imagem.
+</div>
 
-4. Após capturar a foto, toque em "Enviar Foto" para enviá-la ao servidor.
-
-5. O servidor exibirá a foto recebida em sua interface gráfica.
+### Tela do Servidor
+![Tela do Servidor](./img/servidor.png)
