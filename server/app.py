@@ -1,14 +1,12 @@
-import http.server
-import socketserver
-import cgi
-import json
+import socket
 import os
 import datetime
-import socket
+import struct
 import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import threading
+import io
 
 # Função para obter o endereço IP da máquina
 def get_ip_address():
@@ -84,111 +82,105 @@ def show_image(image_path):
     except Exception as e:
         print(f"ERRO ao exibir imagem: {str(e)}")
 
-class ServerHandler(http.server.SimpleHTTPRequestHandler):
-    
-    def do_GET(self):
-        # Resposta simples para qualquer requisição GET
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
-        self.wfile.write(b'Servidor ativo. Use POST para /upload para enviar fotos.')
-    
-    def do_POST(self):
-        # Rota para upload de arquivos
-        if self.path == '/upload':
-            try:
-                # Informações do cliente
-                client_address = self.client_address[0]
-                print(f"Recebendo upload do cliente: {client_address}")
-                
-                content_type, _ = cgi.parse_header(self.headers['Content-Type'])
-                
-                # Verifica se é um multipart form
-                if content_type == 'multipart/form-data':
-                    form = cgi.FieldStorage(
-                        fp=self.rfile,
-                        headers=self.headers,
-                        environ={'REQUEST_METHOD': 'POST',
-                                'CONTENT_TYPE': self.headers['Content-Type']}
-                    )
-                    
-                    # Verifica se tem um campo 'file'
-                    if 'file' in form:
-                        fileitem = form['file']
+# Função para processar clientes
+def handle_client(client_socket, client_address):
+    try:
+        print(f"Nova conexão de {client_address[0]}:{client_address[1]}")
+        
+        # Recebe os primeiros 4 bytes que indicam o tamanho da imagem
+        size_data = client_socket.recv(4)
+        if len(size_data) != 4:
+            print(f"Erro ao receber tamanho da imagem de {client_address[0]}")
+            return
+        
+        # Converte os 4 bytes para um inteiro (tamanho da imagem)
+        image_size = struct.unpack("!I", size_data)[0]
+        print(f"Tamanho da imagem a receber: {image_size} bytes")
+        
+        # Recebe os bytes da imagem
+        image_data = b''
+        bytes_received = 0
 
-                        if fileitem.file:
-                            filename = "photo.jpg"
-                            
-                            # Salvar o arquivo
-                            file_path = os.path.join(UPLOAD_FOLDER, filename)
-                            with open(file_path, 'wb') as file:
-                                file.write(fileitem.file.read())
-                        
-                            print(f"SUCESSO: Foto recebida de {client_address} e salva em: {file_path}")
-                            
-                            # Chamar a função para exibir a imagem após recebê-la
-                            show_image(file_path)
-                        
-                        # Retornar sucesso
-                        self.send_response(200)
-                        self.send_header('Content-type', 'application/json')
-                        self.end_headers()
-                        response = json.dumps({'success': True, 'filename': filename})
-                        self.wfile.write(response.encode())
-                        return
-                
-                # Se chegou aqui, houve erro no upload
-                print(f"ERRO: Upload falhou - arquivo não encontrado no formulário (cliente: {client_address})")
-                self.send_response(400)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                response = json.dumps({'error': 'Arquivo não encontrado na requisição'})
-                self.wfile.write(response.encode())
-                
-            except Exception as e:
-                print(f"ERRO: Upload falhou - {str(e)}")
-                self.send_response(500)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                response = json.dumps({'error': f'Erro interno: {str(e)}'})
-                self.wfile.write(response.encode())
-        else:
-            # Se não for a rota de upload
-            self.send_error(404, "Endpoint não encontrado")
+        # Recebe a imagem em partes
+        while bytes_received < image_size:
+            chunk = client_socket.recv(min(4096, image_size - bytes_received))
+            if not chunk:
+                break
+            image_data += chunk
+            bytes_received += len(chunk)
+            
+            # Mostra progresso
+            progress = (bytes_received / image_size) * 100
+            print(f"\rRecebendo: {progress:.1f}%", end="")
+        
+        print("\nImagem recebida completamente!")
+        
+        # Gerar nome do arquivo com timestamp
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_path = os.path.join(UPLOAD_FOLDER, f"photo_{timestamp}.jpg")
+        
+        # Salvar a imagem
+        with open(file_path, "wb") as f:
+            f.write(image_data)
+            
+        print(f"Imagem salva em: {file_path}")
+        
+        # Mostrar a imagem recebida
+        show_image(file_path)
+        
+    except Exception as e:
+        print(f"ERRO ao processar cliente {client_address[0]}: {str(e)}")
+    finally:
+        client_socket.close()
+
+# Função principal para executar o servidor
+def run_server():
+    # Inicializa o socket do servidor
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    
+    try:
+        # Vincular o socket ao endereço e porta
+        server_socket.bind(("", PORT))
+        # Escutar por conexões
+        server_socket.listen(5)
+        
+        ip_address = get_ip_address()
+        
+        print("\n" + "="*50)
+        print(f"SERVIDOR DE FOTOS INICIADO (Socket TCP)")
+        print("="*50)
+        print(f"Endereço IP local: {ip_address}")
+        print(f"Porta: {PORT}")
+        print(f"URL completa: {ip_address}:{PORT}")
+        print(f"Pasta de uploads: {os.path.abspath(UPLOAD_FOLDER)}")
+        print("="*50)
+        print(f"No aplicativo Android, use: {ip_address}:{PORT}")
+        print("="*50 + "\n")
+        
+        while True:
+            # Aceitar conexão
+            client_socket, client_address = server_socket.accept()
+            # Criar thread para processar o cliente
+            client_thread = threading.Thread(
+                target=handle_client,
+                args=(client_socket, client_address)
+            )
+            client_thread.daemon = True
+            client_thread.start()
+            
+    except KeyboardInterrupt:
+        print("\nServidor encerrado pelo usuário.")
+    except Exception as e:
+        print(f"ERRO no servidor: {str(e)}")
+    finally:
+        server_socket.close()
 
 if __name__ == '__main__':
-    handler = ServerHandler
-    
-    # Permitir reutilizar a porta
-    socketserver.TCPServer.allow_reuse_address = True
-    
-    # Obter IP local
-    ip_address = get_ip_address()
-    
-    # Inicializar a interface gráfica antes de iniciar o servidor
+    # Inicializar a interface gráfica
     init_gui()
     
     # Iniciar o servidor em uma thread separada
-    def run_server():
-        with socketserver.TCPServer(("", PORT), handler) as httpd:
-            print("\n" + "="*50)
-            print(f"SERVIDOR DE FOTOS INICIADO")
-            print("="*50)
-            print(f"Endereço IP local: {ip_address}")
-            print(f"Porta: {PORT}")
-            print(f"URL completa: http://{ip_address}:{PORT}")
-            print(f"Pasta de uploads: {os.path.abspath(UPLOAD_FOLDER)}")
-            print("="*50)
-            print(f"No aplicativo Android, use: {ip_address}:{PORT}")
-            print(f"Pressione Ctrl+C para encerrar o servidor")
-            print("="*50 + "\n")
-            
-            try:
-                httpd.serve_forever()
-            except KeyboardInterrupt:
-                print("\nServidor encerrado pelo usuário.")
-    
-    # Iniciar servidor em thread separada
     server_thread = threading.Thread(target=run_server, daemon=True)
     server_thread.start()
     

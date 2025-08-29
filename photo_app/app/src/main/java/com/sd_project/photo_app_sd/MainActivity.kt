@@ -3,6 +3,8 @@ package com.sd_project.photo_app_sd
 import android.Manifest
 import android.content.ContentValues
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -19,12 +21,9 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.sd_project.photo_app_sd.databinding.ActivityMainBinding
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import java.io.File
+import java.io.ByteArrayOutputStream
+import java.net.Socket
+import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -73,7 +72,7 @@ class MainActivity : AppCompatActivity() {
             binding.btnSendPhoto.setOnClickListener {
                 val serverAddress = binding.editServerAddress.text.toString()
                 if (serverAddress.isNotEmpty() && photoUri != null) {
-                    sendPhoto(serverAddress, photoUri!!)
+                    sendPhotoViaSocket(serverAddress, photoUri!!)
                 } else {
                     Toast.makeText(this, 
                         "Por favor, informe o endereço do servidor e tire uma foto", 
@@ -186,80 +185,104 @@ class MainActivity : AppCompatActivity() {
         )
     }
     
-    private fun sendPhoto(serverAddress: String, photoUri: Uri) {
-        binding.tvStatus.text = "Enviando foto para $serverAddress..."
+    private fun sendPhotoViaSocket(serverAddress: String, photoUri: Uri) {
+        binding.tvStatus.text = "Preparando envio para $serverAddress..."
         
         Thread {
             try {
-                val client = OkHttpClient.Builder()
-                    .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                    .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                    .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                    .build()
-                
-                // Obter o arquivo da URI
-                val inputStream = contentResolver.openInputStream(photoUri)
-                val fileBytes = inputStream?.readBytes()
-                inputStream?.close()
-                
-                if (fileBytes == null) {
+                // Parse do endereço do servidor
+                val parts = serverAddress.split(":")
+                if (parts.size != 2) {
                     runOnUiThread {
-                        binding.tvStatus.text = "❌ Erro: Não foi possível ler o arquivo"
+                        binding.tvStatus.text = "❌ Formato inválido. Use 'host:port'"
                     }
                     return@Thread
                 }
                 
-                // Criar URL com a rota /upload conforme o servidor espera
-                val baseUrl = if (serverAddress.endsWith("/")) {
-                    serverAddress.substring(0, serverAddress.length - 1)
-                } else {
-                    serverAddress
-                }
-                
-                val url = "http://$baseUrl/upload"
-                Log.d("MainActivity", "Enviando para: $url")
-                
-                // Construir corpo multipart com campo 'file' conforme o servidor espera
-                val requestBody = MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart(
-                        "file",
-                        "foto.jpg",
-                        RequestBody.create("image/jpeg".toMediaTypeOrNull(), fileBytes)
-                    )
-                    .build()
-                
-                val request = Request.Builder()
-                    .url(url)
-                    .post(requestBody)
-                    .build()
-                
-                val response = client.newCall(request).execute()
-                val responseBody = response.body?.string() ?: "Sem resposta"
-                
-                Log.d("MainActivity", "Resposta: ${response.code} - $responseBody")
+                val host = parts[0]
+                val port = parts[1].toIntOrNull() ?: 5000
                 
                 runOnUiThread {
-                    if (response.isSuccessful) {
-                        binding.tvStatus.text = "✅ Foto enviada com sucesso!"
-                        try {
-                            // Tentar extrair o nome do arquivo da resposta JSON
-                            val jsonResponse = org.json.JSONObject(responseBody)
-                            val filename = jsonResponse.optString("filename", "")
-                            if (filename.isNotEmpty()) {
-                                binding.tvStatus.text = "✅ Foto enviada! Nome: $filename"
-                            }
-                        } catch (e: Exception) {
-                            // Ignorar erro de parsing do JSON
-                        }
-                    } else {
-                        binding.tvStatus.text = "❌ Erro ao enviar: ${response.code} - ${response.message}"
+                    binding.tvStatus.text = "Processando imagem..."
+                }
+                
+                // Carregar e processar a imagem
+                val inputStream = contentResolver.openInputStream(photoUri)
+                val originalBitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                
+                if (originalBitmap == null) {
+                    runOnUiThread {
+                        binding.tvStatus.text = "❌ Erro ao processar imagem"
+                    }
+                    return@Thread
+                }
+                
+                // Redimensionar imagem conforme requisito (largura máxima 1280px)
+                val resizedBitmap = if (originalBitmap.width > 1280) {
+                    val ratio = 1280.0 / originalBitmap.width
+                    val newHeight = (originalBitmap.height * ratio).toInt()
+                    Bitmap.createScaledBitmap(originalBitmap, 1280, newHeight, true)
+                } else {
+                    originalBitmap
+                }
+                
+                // Converter para JPEG com qualidade 80
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
+                val imageBytes = byteArrayOutputStream.toByteArray()
+                
+                runOnUiThread {
+                    binding.tvStatus.text = "Conectando ao servidor $host:$port..."
+                }
+                
+                // Estabelecer conexão com o servidor
+                val socket = Socket(host, port)
+                val outputStream = socket.getOutputStream()
+                
+                // Enviar o tamanho da imagem (4 bytes)
+                val imageSize = imageBytes.size
+                val sizeBuffer = ByteBuffer.allocate(4).putInt(imageSize).array()
+                outputStream.write(sizeBuffer)
+                outputStream.flush()
+                
+                // Enviar os bytes da imagem
+                runOnUiThread {
+                    binding.tvStatus.text = "Enviando imagem (${imageSize / 1024} KB)..."
+                }
+                
+                // Enviar em chunks para ter feedback de progresso
+                val chunkSize = 4096
+                var bytesSent = 0
+                
+                while (bytesSent < imageSize) {
+                    val remaining = imageSize - bytesSent
+                    val currentChunkSize = minOf(chunkSize, remaining)
+                    
+                    outputStream.write(imageBytes, bytesSent, currentChunkSize)
+                    bytesSent += currentChunkSize
+                    
+                    val progress = (bytesSent.toFloat() / imageSize) * 100
+                    val progressText = String.format("%.1f%%", progress)
+                    
+                    runOnUiThread {
+                        binding.tvStatus.text = "Enviando: $progressText"
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("MainActivity", "Erro ao enviar foto", e)
+                
+                outputStream.flush()
+                socket.close()
+                
                 runOnUiThread {
-                    binding.tvStatus.text = "❌ Falha na conexão: ${e.message}"
+                    binding.tvStatus.text = "✅ Foto enviada com sucesso!"
+                    Toast.makeText(this, "Foto enviada com sucesso!", Toast.LENGTH_SHORT).show()
+                }
+                
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Erro ao enviar foto via socket", e)
+                runOnUiThread {
+                    binding.tvStatus.text = "❌ Erro: ${e.message}"
+                    Toast.makeText(this, "Erro ao enviar: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }.start()
