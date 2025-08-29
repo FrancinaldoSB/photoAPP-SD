@@ -11,7 +11,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.TextView
-import android.widget.Toast
+import com.google.android.material.snackbar.Snackbar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
             startCamera()
         } else {
             binding.tvStatus.text = "❌ Permissão da câmera negada"
-            Toast.makeText(this, "Precisamos da permissão da câmera", Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.root, "Precisamos da permissão da câmera", Snackbar.LENGTH_LONG).show()
         }
     }
 
@@ -74,14 +74,12 @@ class MainActivity : AppCompatActivity() {
                 if (serverAddress.isNotEmpty() && photoUri != null) {
                     sendPhotoViaSocket(serverAddress, photoUri!!)
                 } else {
-                    Toast.makeText(this, 
-                        "Por favor, informe o endereço do servidor e tire uma foto", 
-                        Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, "Por favor, informe o endereço do servidor e tire uma foto", Snackbar.LENGTH_LONG).show()
                 }
             }
         } catch (e: Exception) {
             // Tratamento de erro para depuração
-            Toast.makeText(this, "Erro ao iniciar: ${e.message}", Toast.LENGTH_LONG).show()
+            Snackbar.make(binding.root, "Erro ao iniciar: ${e.message}", Snackbar.LENGTH_LONG).show()
             e.printStackTrace()
             
             // Fallback para layout simples em caso de erro
@@ -169,7 +167,7 @@ class MainActivity : AppCompatActivity() {
                     photoUri = outputFileResults.savedUri
                     
                     val msg = "Foto salva com sucesso: ${photoUri.toString()}"
-                    Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
                     binding.tvStatus.text = "✅ Foto capturada!"
                     
                     // Mostrar a foto capturada
@@ -179,6 +177,7 @@ class MainActivity : AppCompatActivity() {
                 
                 override fun onError(exception: ImageCaptureException) {
                     binding.tvStatus.text = "❌ Falha ao capturar foto: ${exception.message}"
+                    Snackbar.make(binding.root, "Erro ao capturar foto: ${exception.message}", Snackbar.LENGTH_LONG).show()
                     Log.e("MainActivity", "Erro ao salvar foto", exception)
                 }
             }
@@ -195,6 +194,7 @@ class MainActivity : AppCompatActivity() {
                 if (parts.size != 2) {
                     runOnUiThread {
                         binding.tvStatus.text = "❌ Formato inválido. Use 'host:port'"
+                        Snackbar.make(binding.root, "Formato inválido. Use 'host:port'", Snackbar.LENGTH_LONG).show()
                     }
                     return@Thread
                 }
@@ -214,6 +214,7 @@ class MainActivity : AppCompatActivity() {
                 if (originalBitmap == null) {
                     runOnUiThread {
                         binding.tvStatus.text = "❌ Erro ao processar imagem"
+                        Snackbar.make(binding.root, "Erro ao processar imagem", Snackbar.LENGTH_LONG).show()
                     }
                     return@Thread
                 }
@@ -275,14 +276,14 @@ class MainActivity : AppCompatActivity() {
                 
                 runOnUiThread {
                     binding.tvStatus.text = "✅ Foto enviada com sucesso!"
-                    Toast.makeText(this, "Foto enviada com sucesso!", Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, "Foto enviada com sucesso!", Snackbar.LENGTH_LONG).show()
                 }
                 
             } catch (e: Exception) {
                 Log.e("MainActivity", "Erro ao enviar foto via socket", e)
                 runOnUiThread {
                     binding.tvStatus.text = "❌ Erro: ${e.message}"
-                    Toast.makeText(this, "Erro ao enviar: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Snackbar.make(binding.root, "Erro ao enviar: ${e.message}", Snackbar.LENGTH_LONG).show()
                 }
             }
         }.start()

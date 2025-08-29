@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Photo_app_sd" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Photo_app_sd" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:colorBackground">@color/white</item>
+        <item name="android:colorPrimary">@color/purple_500</item>
+        <item name="android:colorAccent">@color/purple_200</item>
+        <item name="android:buttonStyle">@style/Widget.AppCompat.Button.Colored</item>
+    </style>
 </resources>

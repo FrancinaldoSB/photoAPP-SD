@@ -22,12 +22,19 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layoutServerAddress"
+        style="@style/Widget.Material3.TextInputLayout.FilledBox.Dense"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:hint="Servidor (host:port)"
+        app:boxBackgroundMode="filled"
+        app:boxCornerRadiusTopStart="16dp"
+        app:boxCornerRadiusTopEnd="16dp"
+        app:boxCornerRadiusBottomStart="16dp"
+        app:boxCornerRadiusBottomEnd="16dp"
+        app:boxBackgroundColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvStatus">
@@ -36,7 +43,8 @@
             android:id="@+id/editServerAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text" />
+            android:inputType="text"
+            android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
@@ -47,6 +55,8 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:text="Pedir Permissão da Câmera"
+        android:background="@drawable/btn_background"
+        android:textColor="@color/purple_700"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layoutServerAddress" />
@@ -99,7 +109,9 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:text="Tirar Foto" />
+            android:text="Tirar Foto"
+            android:background="@drawable/btn_background"
+            android:textColor="@color/purple_700" />
 
         <Button
             android:id="@+id/btnSendPhoto"
@@ -107,7 +119,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="Enviar Foto" />
+            android:text="Enviar Foto"
+            android:background="@drawable/btn_background"
+            android:textColor="@color/purple_700" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
