@@ -15,7 +15,13 @@
         android:layout_marginEnd="16dp"
         android:text="Status da aplicação"
         android:textAlignment="center"
-        android:textSize="16sp"
+        android:textSize="18sp"
+        android:textColor="@color/pastel_cyber_accent"
+        android:fontFamily="monospace"
+        android:shadowColor="@color/pastel_purple_dark"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -41,6 +47,7 @@
 
     <Button
         android:id="@+id/btnRequestPermissions"
+        style="@style/Widget.CyberButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -95,6 +102,7 @@
 
         <Button
             android:id="@+id/btnTakePhoto"
+            style="@style/Widget.CyberButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
@@ -103,6 +111,7 @@
 
         <Button
             android:id="@+id/btnSendPhoto"
+            style="@style/Widget.CyberButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"

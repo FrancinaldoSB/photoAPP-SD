@@ -4,6 +4,7 @@ import datetime
 import struct
 import tkinter as tk
 from tkinter import messagebox
+import tkinter.font as tkfont
 from PIL import Image, ImageTk
 import threading
 import io
@@ -41,11 +42,28 @@ def init_gui():
     root = tk.Tk()
     root.title("Servidor de Fotos")
     root.geometry("600x500")
-    
-    label_status = tk.Label(root, text="Aguardando Foto!", font=("Arial", 20))
+
+    # Cor roxo pastel
+    root.configure(bg="white")
+
+
+    # Fonte Tilt Warp Regular (ou fallback)
+    # Tenta Tilt Warp, senão Arial, senão padrão do sistema
+    try:
+        tiltwarp_font = tkfont.Font(family="Tilt Warp", size=22, weight="normal")
+        # Testa se realmente existe
+        if "tilt" not in tiltwarp_font.actual("family").lower():
+            raise Exception()
+    except:
+        try:
+            tiltwarp_font = tkfont.Font(family="Arial", size=22, weight="bold")
+        except:
+            tiltwarp_font = tkfont.Font(size=22, weight="bold")
+
+    label_status = tk.Label(root, text="Aguardando foto!", font=tiltwarp_font, bg="white", fg="#3d246c")
     label_status.pack(pady=20)
-    
-    photo_label = tk.Label(root)
+
+    photo_label = tk.Label(root, bg="white")
     photo_label.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
     
     # Iniciar uma thread para atualizar a interface periodicamente
@@ -72,7 +90,7 @@ def show_image(image_path):
         # Atualizar interface em thread segura
         def update_ui():
             if label_status and photo_label:
-                label_status.config(text="Foto Recebida!")
+                label_status.config(text="Foto Recebida!", fg="#4a148c")
                 photo_label.config(image=img_reference)
         
         # Usar método after para programar a atualização da UI na thread principal
@@ -139,25 +157,47 @@ def run_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
+    # Cores para terminal
+    # Roxo pastel, azul pastel, amarelo pastel, verde pastel (cores aproximadas)
+    PASTEL_PURPLE = "\033[38;2;179;157;219m"
+    PASTEL_BLUE = "\033[38;2;144;202;249m"
+    PASTEL_YELLOW = "\033[38;2;255;249;196m"
+    PASTEL_GREEN = "\033[38;2;174;213;129m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
     try:
         # Vincular o socket ao endereço e porta
         server_socket.bind(("", PORT))
         # Escutar por conexões
         server_socket.listen(5)
-        
+
         ip_address = get_ip_address()
-        
-        print("\n" + "="*50)
-        print(f"SERVIDOR DE FOTOS INICIADO (Socket TCP)")
-        print("="*50)
-        print(f"Endereço IP local: {ip_address}")
-        print(f"Porta: {PORT}")
-        print(f"URL completa: {ip_address}:{PORT}")
-        print(f"Pasta de uploads: {os.path.abspath(UPLOAD_FOLDER)}")
-        print("="*50)
-        print(f"No aplicativo Android, use: {ip_address}:{PORT}")
-        print("="*50 + "\n")
-        
+
+        # Tabela colorida (largura maior e alinhamento)
+        table_w = 100
+        sep = f"+{'-'*table_w}+"
+        content_w = table_w  # para as bordas |
+        def row(label, value, color=PASTEL_BLUE, label_color=WHITE):
+            label_fmt = f" {label_color}{BOLD}{label:<22}{END}"
+            # Garante que o valor não ultrapasse o limite
+            value_str = str(value)
+            max_value_len = content_w - 23  # 1 espaço + 22 label
+            if len(value_str) > max_value_len:
+                value_str = value_str[:max_value_len-3] + '...'
+            value_fmt = f"{color}{value_str:<{max_value_len}}{END}"
+            return f"{PASTEL_PURPLE}|{END}{label_fmt}{value_fmt}{PASTEL_PURPLE}|{END}"
+
+        print(f"\n{PASTEL_PURPLE}{sep}{END}")
+        print(f"{PASTEL_PURPLE}|{END}{BOLD}{PASTEL_YELLOW}{' SERVIDOR DE FOTOS INICIADO (Socket TCP) ':^{content_w}}{END}{PASTEL_PURPLE}|{END}")
+        print(f"{PASTEL_PURPLE}{sep}{END}")
+        print(row('Endereço IP local:', ip_address))
+        print(row('Porta:', str(PORT)))
+        print(row('URL completa:', f'{ip_address}:{PORT}'))
+        print(row('Pasta de uploads:', os.path.abspath(UPLOAD_FOLDER)))
+        print(row('No app Android, use:', f'{ip_address}:{PORT}', PASTEL_GREEN))
+        print(f"{PASTEL_PURPLE}{sep}{END}\n")
+
         while True:
             # Aceitar conexão
             client_socket, client_address = server_socket.accept()
@@ -168,7 +208,6 @@ def run_server():
             )
             client_thread.daemon = True
             client_thread.start()
-            
     except KeyboardInterrupt:
         print("\nServidor encerrado pelo usuário.")
     except Exception as e:

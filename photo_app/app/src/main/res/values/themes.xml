@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Photo_app_sd" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Photo_app_sd" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/pastel_purple</item>
+        <item name="colorPrimaryVariant">@color/pastel_purple_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/pastel_cyber_accent</item>
+        <item name="colorSecondaryVariant">@color/pastel_purple_dark</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:windowBackground">@color/pastel_purple_light</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="buttonStyle">@style/Widget.CyberButton</item>
+    </style>
+
+    <style name="Widget.CyberButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:backgroundTint">@color/button_translucent</item>
+        <item name="android:textColor">@color/pastel_cyber_accent</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:shadowColor">@color/pastel_purple_dark</item>
+        <item name="android:shadowDx">1</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:shadowRadius">2</item>
+    </style>
 </resources>
