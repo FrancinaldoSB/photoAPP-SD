@@ -1,3 +1,12 @@
+val CyberpunkPastelPurple = Color(0xFFB388FF)
+val CyberpunkPastelBlue = Color(0xFF82B1FF)
+val CyberpunkPastelGreen = Color(0xFF69F0AE)
+val CyberpunkNeonYellow = Color(0xFFFFE600)
+val CyberpunkNeonCyan = Color(0xFF00FFF7)
+val CyberpunkNeonPink = Color(0xFFFF00C8)
+val CyberpunkBg = Color(0xFF18122B)
+val CyberpunkBorder = Color(0xFF7C4DFF)
+val CyberpunkTranslucent = Color(0xB3B39DDB)
 package com.sd_project.photo_app_sd.ui.theme
 
 import androidx.compose.ui.graphics.Color
